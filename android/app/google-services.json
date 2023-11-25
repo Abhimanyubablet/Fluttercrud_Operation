@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "600243686836",
+    "firebase_url": "https://updateprofileproject-default-rtdb.firebaseio.com",
+    "project_id": "updateprofileproject",
+    "storage_bucket": "updateprofileproject.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:600243686836:android:0ef452a10a1c6b3cee76e1",
+        "android_client_info": {
+          "package_name": "com.example.profile_update_firebase"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "600243686836-ufp82ukjt5fq488m5f5f84dqbmri1etp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAu-33rzTGHuolV9RQ0p2UPeqgNOzRveBw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "600243686836-ufp82ukjt5fq488m5f5f84dqbmri1etp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
