@@ -4,6 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ImagePickerUpload extends StatefulWidget {
@@ -14,67 +15,66 @@ class ImagePickerUpload extends StatefulWidget {
 }
 
 class _ImagePickerUploadState extends State<ImagePickerUpload> {
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final ImagePicker _picker = ImagePicker();
+
+  final CollectionReference _items =
+  FirebaseFirestore.instance.collection('UsersData');
+
+  var taskSnapshot;
+
+  File? _image;
+
+
   var userNameStoreController = TextEditingController();
   var userEmailStoreController = TextEditingController();
   var userContactStoreController = TextEditingController();
-  File? _image;
-  final picker = ImagePicker();
-
-  var storage = FirebaseStorage.instance;
 
   Future getImageGallery() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-    setState(() {
-      if (pickedFile != null) {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
         _image = File(pickedFile.path);
-      } else {
-        print("No Image Picked");
-      }
-    });
-  }
-
-  Future<void> uploadImage() async {
-    if (_image != null) {
-      try {
-        File file = File(_image!.path);
-        // Upload image to Firebase Storage
-        var  storageRef = storage.ref();
-        var uploadTask = storageRef.child("/image").child("Data").putFile(file);
-
-        // Wait for the upload to complete
-        await uploadTask;
-
-        // Get the download URL
-        var imageUrl = await storageRef.getDownloadURL();
-
-        // Get user input from text fields
-        String userName = userNameStoreController.text;
-        String userEmail = userEmailStoreController.text;
-        String userContact = userContactStoreController.text;
-
-        // Add the image URL to Firestore
-        await FirebaseFirestore.instance.collection('usersData').add({
-          'imageUrl': imageUrl,
-          'name': userName,
-          'email': userEmail,
-          'contact': userContact,
-          'timestamp': FieldValue.serverTimestamp(), // Add a timestamp if needed
-        });
-
-        toastMessage('Image uploaded successfully.');
-      } catch (error) {
-        toastMessage('Error uploading image: $error');
-      }
-    } else {
-      toastMessage('Please pick an image first.');
+      });
     }
   }
 
-  void toastMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(message),
-      duration: Duration(seconds: 2),
-    ));
+  Future<void> _uploadImage() async {
+    try {
+      if (_image != null) {
+        String imageName = DateTime.now().millisecondsSinceEpoch.toString();
+        Reference reference = _storage.ref().child('images/$imageName.jpg');
+        UploadTask uploadTask = reference.putFile(_image!);
+        taskSnapshot = await uploadTask.whenComplete(() => print('Image uploaded.'));
+
+        // Get the download URL
+        String downloadURL = await taskSnapshot.ref.getDownloadURL();
+
+        final String name = userNameStoreController.text;
+        final String email = userEmailStoreController.text;
+        final String contact = userContactStoreController.text;
+
+        await _items.add({'url': downloadURL, "name": name, "email": email, "contact": contact});
+
+        userNameStoreController.text = '';
+        userEmailStoreController.text = '';
+        userContactStoreController.text = '';
+
+        // Show a toast message
+        Fluttertoast.showToast(
+          msg: "Data successfully registered in Firebase",
+          backgroundColor: Colors.blueGrey,
+          timeInSecForIosWeb: 5,
+        );
+
+        Navigator.of(context).pop();
+      } else {
+        print('No image selected');
+      }
+    } catch (e) {
+      print('Error uploading image: $e');
+    }
   }
 
   @override
@@ -101,40 +101,33 @@ class _ImagePickerUploadState extends State<ImagePickerUpload> {
                       color: Colors.black,
                     ),
                   ),
-                  child: _image != null ? Image.file(_image!.absolute) : Center(child: Icon(Icons.image)),
+                  child: _image != null
+                      ? Image.file(_image!.absolute)
+                      : Center(child: Icon(Icons.image)),
                 ),
               ),
             ),
-
             Container(
                 margin: EdgeInsets.all(15),
-              child: TextField(
-                  controller: userNameStoreController,
-                decoration: InputDecoration(
-                  hintText: "Name",
-              )
-            )
-            ),
+                child: TextField(
+                    controller: userNameStoreController,
+                    decoration: InputDecoration(
+                      hintText: "Name",
+                    ))),
             Container(
                 margin: EdgeInsets.all(15),
                 child: TextField(
                     controller: userEmailStoreController,
                     decoration: InputDecoration(
                       hintText: "Email",
-                    )
-                )
-            ),
+                    ))),
             Container(
                 margin: EdgeInsets.all(15),
                 child: TextField(
                     controller: userContactStoreController,
                     decoration: InputDecoration(
                       hintText: "Contact",
-
-                    )
-                )
-            ),
-
+                    ))),
             SizedBox(
               height: 20,
             ),
@@ -142,7 +135,9 @@ class _ImagePickerUploadState extends State<ImagePickerUpload> {
               width: double.infinity,
               margin: EdgeInsets.all(20),
               child: ElevatedButton(
-                onPressed: uploadImage,
+                onPressed: () {
+                  _uploadImage(); // Corrected the function call
+                },
                 child: Text("Upload"),
               ),
             )

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:profile_update_firebase/widgets/firebase_work/update_firestore_data.dart';
 
 import 'firebase_work/image_picker_upload.dart';
 
@@ -39,17 +40,13 @@ class _FirebaseWorkState extends State<FirebaseWork> {
                 Container(
                   margin: EdgeInsets.all(10),
                   child: ElevatedButton(
-                    onPressed: () {  },
-                    child: Text("Data Image View"),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>UpdateFirestoreData()));
+                    },
+                    child: Text("Data View Edit And Delete"),
                   ),
                 ),
-                Container(
-                  margin: EdgeInsets.all(10),
-                  child: ElevatedButton(
-                    onPressed: () {  },
-                    child: Text("Data Image Edit"),
-                  ),
-                ),
+
               ],
             ),
           ),

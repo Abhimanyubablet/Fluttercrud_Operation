@@ -10,13 +10,14 @@ void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
       options: FirebaseOptions(
-          storageBucket: 'your-firebase-storage-bucket-url',
+          storageBucket: 'gs://updateprofileproject.appspot.com',
           apiKey: 'AIzaSyCnb0DVXegJUkjtWoSx8XiXyZcIh3nyWg4',
           appId: '1:600243686836:android:0ef452a10a1c6b3cee76e1',
           messagingSenderId: '600243686836',
           projectId: 'updateprofileproject'
       )
   );
+
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
     initialRoute: "splash",

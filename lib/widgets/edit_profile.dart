@@ -17,6 +17,8 @@ class _EditProfileState extends State<EditProfile> {
   File? _image;
   final picker = ImagePicker();
 
+
+
   @override
   void initState() {
     super.initState();
@@ -42,25 +44,41 @@ class _EditProfileState extends State<EditProfile> {
   Future<void> _updateUserProfile() async {
     if (_user != null) {
       try {
-        await _user!.updatePhotoURL(_image!.path);
-        await _user!.updateEmail("newemail@example.com"); // Replace with the new email
-        await _user!.updateDisplayName("New Display Name"); // Replace with the new display name
+        if (_image != null) {
+          // Upload the image to Firebase Storage
+          await _uploadImageToFirebaseStorage();
 
+          // Get the download URL of the uploaded image
+          String imageUrl = await FirebaseStorage.instance
+              .ref()
+              .child("user_images/${_user!.uid}")
+              .getDownloadURL();
+
+          // Update user profile with the image URL
+          await _user!.updatePhotoURL(imageUrl);
+        }
+
+
+        // Provide feedback to the user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Profile updated successfully!"),
           ),
         );
+
       } catch (e) {
+        // Handle the error and provide feedback to the user
         print("Error updating profile: $e");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Error updating profile"),
+            content: Text("Error updating profile: $e"),
           ),
         );
       }
     }
   }
+
+
 
   Future<void> _uploadImageToFirebaseStorage() async {
     if (_image != null) {
@@ -101,15 +119,17 @@ class _EditProfileState extends State<EditProfile> {
                     width: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: _image != null
-                            ? FileImage(_image!) as ImageProvider<Object>
-                            : NetworkImage(_user!.photoURL!) as ImageProvider<Object>,
-                      ),
+
                     ),
                     child: _image != null
                         ? Image.file(_image!.absolute)
-                        : Center(child: Icon(Icons.image)),
+                        : Center(child: Image.network(
+                      _user!.photoURL!,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                    ),
+                    ),
                   ),
                 ),
               ),
@@ -134,8 +154,6 @@ class _EditProfileState extends State<EditProfile> {
               child: ElevatedButton(
                 onPressed: () async {
                   await _updateUserProfile();
-                  await _uploadImageToFirebaseStorage();
-
                   Navigator.pushNamed(context, "dashboard");
                 },
                 child: Text("Save Changes"),
